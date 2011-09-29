@@ -78,7 +78,7 @@ class Test {
     }
 }
 
-$add = _f::partial('Test::add')->apply(array(10))->then($print_out);
+$add = _f::partial('Test::add')->apply(array('first' => 10))->then($print_out);
 
 $add(100); // outputs 110
 
@@ -95,3 +95,20 @@ $name_change('Philip Cali'); // outputs "Bob Charles"
 $name_change('Anna Cali'); // outputs "Anna Charles"
 
 var_dump($str_replace('a', 'b', 'aaa') == str_replace('a', 'b', 'aaa'));
+
+$rand = _f::partial('rand')->apply(array(0));
+$rander = function ($x, $y) use ($rand) { return $rand($x) + $rand($y); };
+
+$map = _f::partial('array_map');
+
+$on_two = $map->apply(array(1 => range(1, 10), 2 => range(1, 10)));
+
+$map($print_out, $on_two($rander));
+
+$get_string = function ($key, $module, $a = null) {
+    return "$key for $module eating $a";
+};
+
+$_s = _f::partial($get_string)->apply(array(1 => 'optional'))->then($print_out);
+
+$_s('Jerry', 'ham sandwich');

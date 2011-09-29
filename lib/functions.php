@@ -1,5 +1,7 @@
 <?php
 
+require_once dirname(__FILE__) . '/option.php';
+
 abstract class _f {
     public static function identity() {
         return function ($e) { return $e; };
@@ -29,6 +31,10 @@ abstract class AdvFun {
         }
     }
 
+    public function get() {
+        return $this->boxed_fun;
+    }
+
     private static function reformat($fun) {
         if (is_string($fun) and strpos($fun, '::')) {
             return explode('::', $fun);
@@ -40,25 +46,29 @@ abstract class AdvFun {
 
 class Composable extends AdvFun {
 
-    public function __invoke($param) {
+    public function __invoke() {
         $boxed_fun = $this->boxed_fun;
 
-        return $boxed_fun($param);
+        return call_user_func_array($boxed_fun, func_get_args());
     }
 
     public function compose($fun) {
         $boxed_fun = $this->boxed_fun;
 
-        return new Composable(function ($x) use ($boxed_fun, $fun) {
-            return $boxed_fun($fun($x));
+        return new Composable(function () use ($boxed_fun, $fun) {
+            $args = func_get_args();
+
+            return $boxed_fun(call_user_func_array($fun, $args));
         });
     }
 
     public function then($fun) {
         $boxed_fun = $this->boxed_fun;
 
-        return new Composable(function ($x) use ($fun, $boxed_fun) {
-            return $fun($boxed_fun($x));
+        return new Composable(function () use ($fun, $boxed_fun) {
+            $args = func_get_args();
+
+            return $fun(call_user_func_array($boxed_fun, $args));
         });
     }
 }
@@ -106,8 +116,6 @@ class Partial extends AdvFun {
     public function __invoke() {
         $boxed_fun = $this->boxed_fun;
 
-        $args = func_get_args();
-
         return call_user_func_array($boxed_fun, func_get_args());
     }
 
@@ -116,6 +124,8 @@ class Partial extends AdvFun {
         if (is_array($this->boxed_fun)) {
             list($class, $method) = $this->boxed_fun;
             $reflector = new ReflectionMethod($class, $method);
+        } else if (is_subclass_of($this->boxed_fun, 'AdvFun')) {
+            $reflector = new ReflectionFunction($this->boxed_fun->get());
         } else {
             $reflector = new ReflectionFunction($this->boxed_fun);
         }
