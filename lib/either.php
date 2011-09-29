@@ -15,10 +15,6 @@ abstract class Either {
         }
     }
 
-    function indentity() {
-        return function($a) { return $a; };
-    }
-
     function isRight() {
         return !$this->isLeft();
     }
