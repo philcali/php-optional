@@ -70,11 +70,13 @@ $to_philip($statement->map($code_to_message)->get());
 
 $either = return_either($val);
 
-$print_out($either->fold(_f::identity(), $code_to_message));
+$either->fold(_f::identity()->then($print_out), $output);
+
+$either->toOption()->each($output);
 
 class Test {
     public static function add($first, $second) {
-        print_r($first + $second);
+        return $first + $second;
     }
 }
 
