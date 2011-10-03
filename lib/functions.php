@@ -4,7 +4,7 @@ require_once dirname(__FILE__) . '/option.php';
 
 abstract class _f {
     public static function identity() {
-        return function ($e) { return $e; };
+        return new Identity();
     }
 
     public static function composable($fun) {
@@ -70,6 +70,12 @@ class Composable extends AdvFun {
 
             return $fun(call_user_func_array($boxed_fun, $args));
         });
+    }
+}
+
+class Identity extends Composable {
+    public function __construct() {
+        parent::__construct(function ($a) { return $a; });
     }
 }
 
